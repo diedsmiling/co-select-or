@@ -1,5 +1,4 @@
 'use strict';
+var Bootstrap = require('./server/bootstrap');
 
-var app = ()=> 'ok';
-
-console.log(app());
+var app = Bootstrap.launch();
