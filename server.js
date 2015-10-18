@@ -1,4 +1,4 @@
 'use strict';
 var Bootstrap = require('./server/bootstrap');
-
-var app = Bootstrap.launch();
+var launcher = new Bootstrap();
+var app = launcher.launch();
