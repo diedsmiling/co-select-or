@@ -1,7 +1,7 @@
 'use strict';
-let proxyquire = require('proxyquire');
-let Bootstrap = require('../../server/bootstrap');
-let server = () => {
+let proxyquire  = require('proxyquire');
+let Bootstrap   = require('../../server/bootstrap');
+let server      = () => {
     proxyquire('../../server', {
         './server/bootstrap': Bootstrap
     });
@@ -15,7 +15,7 @@ describe('Server', ()=> {
         expect(Bootstrap).to.be.called;
     });
 
-    it('Should launch the bootstrap', ()=> {
+    it('should launch the bootstrap', ()=> {
         sinon.spy(Bootstrap.prototype, 'launch');
         server();
         expect(Bootstrap.prototype.launch).to.be.called;

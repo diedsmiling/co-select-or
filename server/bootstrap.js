@@ -1,20 +1,46 @@
 'use strict';
-var express = require('express');
+let express         = require('express');
+let bodyParser      = require('body-parser');
+let logger          = require('morgan');
+let errorHandler    = require('errorhandler');
+let routes          = require('../routes/');
 
 class Bootstrap {
 
+    /**
+     * Launches the application
+     */
     launch() {
         this.app = express();
-        this.app.listen(3300, this.launchCallback);
-        return this.app;
+        this.configure();
+        this.app.listen(this.app.get('port'), this.launchCallback);
     }
 
+    /**
+     * Application launch callback
+     *
+     * @param {error} err Error object
+     */
     launchCallback(err) {
         if (err) {
             throw new ReferenceError('Could not launch');
         }
 
-        console.log('Server is up at http://localhost:3300');
+        console.log('Server is up at http://localhost:' + this.app.get('port'));
+    }
+
+    /**
+     * Configures the application
+     */
+    configure() {
+        this.app.set('port', process.env.PORT || 3300);
+
+        //Set up middlewares
+        this.app.use(bodyParser.urlencoded({ extended: false }));
+        if ('development' === this.app.get('env')) {
+            this.app.use(errorHandler());
+        }
+        routes.init(this.app);
     }
 }
 
