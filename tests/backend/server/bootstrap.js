@@ -10,8 +10,8 @@ let launcher;
 /**
  * Checks if a middleware is set up
  *
- * @param {obj} app Injected application object
- * @param {str} middlewareName Middleware name
+ * @param {obj} app Application object
+ * @param {str} middlewareName Name of the middleware to test
  * @returns {bool}
  */
 function isMiddlewareSet(app, middlewareName) {
@@ -25,8 +25,8 @@ function isMiddlewareSet(app, middlewareName) {
 }
 
 describe('Bootstrap', ()=> {
-    beforeEach(()=> {
 
+    beforeEach(()=> {
         app         = {
             listen: sinon.stub(),
             set:    sinon.spy(),
@@ -46,7 +46,6 @@ describe('Bootstrap', ()=> {
         });
 
         launcher    = new Bootstrap();
-
     });
 
     describe('launch() method', ()=> {
@@ -93,13 +92,14 @@ describe('Bootstrap', ()=> {
             console.log.restore();
         });
 
-        it('should throw an error', () => {1
+        it('should throw an error', () => {
             expect(() => {
                 launcher.launchCallback('err');
             }).to.throw(Error);
         });
 
         describe('configure() method (while using expressStub)', () => {
+
             it('should be defined', () => {
                 expect(launcher.configure).to.not.be.undefined;
             });
@@ -118,7 +118,8 @@ describe('Bootstrap', ()=> {
     });
 });
 
-describe('configure method without stub', () => {
+describe('Bootstrap without stub', () => {
+
     beforeEach(() => {
         Bootstrap = require('../../../server/bootstrap');
 
