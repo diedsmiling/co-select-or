@@ -15,7 +15,7 @@ describe('Routes', () => {
         routes.init(app);
     });
 
-    it('should handle "/api/v1/selectors" request', () => {
+    it('should handle "/api/v1/ba" request', () => {
         expect(app.get).to.be.calledWith('/api/v1/selectors', collector.collect);
     });
 

@@ -75,58 +75,51 @@ describe('Bootstrap', ()=> {
             expect(app.listen).to.be.calledWith(3300, sinon.match.func);
         });
 
-    });
-
-    describe('launchCallback method', () => {
-
-        it('should be defined', ()=> {
-            expect(launcher.launchCallback).to.not.be.undefined;
-        });
-
         it('should log to console', ()=> {
             sinon.spy(console, 'log');
+            app.listen.callsArgWith(1, null);
             launcher.launch();
-            launcher.launchCallback();
+
             expect(app.get).to.be.calledWith('port');
             expect(console.log).to.be.calledWith('Server is up at http://localhost:3300');
             console.log.restore();
         });
 
         it('should throw an error', () => {
+            app.listen.callsArgWith(1, 'err');
             expect(() => {
-                launcher.launchCallback('err');
+                launcher.launch();
             }).to.throw(Error);
         });
+    });
 
-        describe('configure() method (while using expressStub)', () => {
+    describe('configure() method (while using expressStub)', () => {
 
-            it('should be defined', () => {
-                expect(launcher.configure).to.not.be.undefined;
-            });
-
-            it('should set the port', ()=> {
-                launcher.launch();
-                expect(app.set).to.be.calledWith('port', 3300);
-            });
-
-            it('should init routes', () => {
-                launcher.launch();
-                expect(routesStub.init).to.be.calledWith(launcher.app);
-            });
+        it('should be defined', () => {
+            expect(launcher.configure).to.not.be.undefined;
         });
 
+        it('should set the port', ()=> {
+            launcher.launch();
+            expect(app.set).to.be.calledWith('port', 3300);
+        });
+
+        it('should init routes', () => {
+            launcher.launch();
+            expect(routesStub.init).to.be.calledWith(launcher.app);
+        });
     });
+
 });
 
 describe('Bootstrap without stub', () => {
 
     beforeEach(() => {
-        Bootstrap = require('../../../server/bootstrap');
+        Bootstrap   = require('../../../server/bootstrap');
+        launcher    = new Bootstrap();
 
-        launcher = new Bootstrap();
         launcher.launch();
         launcher.app.get = sinon.stub().returns('development');
-
     });
 
     it('should use "bodyParser.urlencoded" middleware', function() {

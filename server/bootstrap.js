@@ -13,20 +13,13 @@ class Bootstrap {
     launch() {
         this.app = express();
         this.configure();
-        this.app.listen(this.app.get('port'), this.launchCallback);
-    }
+        this.app.listen(this.app.get('port'), (err) => {
+            if (err) {
+                throw new ReferenceError('Could not launch');
+            }
 
-    /**
-     * Application launch callback
-     *
-     * @param {error} err Error object
-     */
-    launchCallback(err) {
-        if (err) {
-            throw new ReferenceError('Could not launch');
-        }
-
-        console.log('Server is up at http://localhost:' + this.app.get('port'));
+            console.log('Server is up at http://localhost:' + this.app.get('port'));
+        });
     }
 
     /**

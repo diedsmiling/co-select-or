@@ -2,7 +2,7 @@
 
 let collector = {
     collect: (req, res) => {
-        console.log('Collect selectors');
+        res.json({res: 'Collect selectors'});
     }
 }
 
