@@ -1,5 +1,5 @@
 'use strict';
-var Bootstrap = require('./server/bootstrap');
+let Bootstrap = require('./server/bootstrap');
 
-var launcher = new Bootstrap();
+let launcher = new Bootstrap();
 launcher.launch();
