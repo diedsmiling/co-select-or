@@ -3,10 +3,7 @@ let request    = require('request');
 let validator   = require('validator');
 
 class Collector {
-    construcotr() {
-        console.log(this);
-        console.log('ada');
-    }
+
     collect(req, res) {
         if (typeof req == 'undefined') {
             return false;
