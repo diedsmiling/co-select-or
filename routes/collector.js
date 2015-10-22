@@ -2,8 +2,15 @@
 let request    = require('request');
 let validator   = require('validator');
 
-let collector = {
-    collect: (req, res) => {
+class Collector {
+    construcotr() {
+        console.log(this);
+        console.log('ada');
+    }
+    collect(req, res) {
+        if (typeof req == 'undefined') {
+            return false;
+        }
         let url      = req.query.url;
         let vOptions = {
             protocols: ['http', 'https']
@@ -15,7 +22,7 @@ let collector = {
                 status: '400',
                 error:  'An empty url is not an url at all :('
             });
-            return true;
+            return false;
         }
 
         if (!validator.isURL(url, vOptions)) {
@@ -24,15 +31,10 @@ let collector = {
                 status: '400',
                 error:  'Wrong url :('
             });
-            return true;
+            return false;
         }
-
-        request(url, collector.requestCallback);
-    },
-    requestCallback: (error, response, body) => {
-        console.log(response);
     }
 
 }
 
-module.exports = collector;
+module.exports = Collector;
