@@ -10,7 +10,7 @@ describe('Routes', () => {
 
     beforeEach(() => {
         app = {
-            get: sinon.stub()
+            get: sinon.stub().callsArgWith(1, req, res)
         };
 
         sinon.spy(Collector.prototype, 'collect');
@@ -20,7 +20,8 @@ describe('Routes', () => {
     });
 
     it('should handle "/collector" request', () => {
-        expect(app.get).to.be.calledWith('/collector', Collector.prototype.collect);
+        expect(app.get).to.be.calledWith('/collector', sinon.match.func);
+        expect(Collector.prototype.collect).to.be.called;
     });
 
 });
