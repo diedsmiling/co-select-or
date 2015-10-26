@@ -9,7 +9,7 @@ class Collector {
         };
 
         if (typeof url == 'undefined' || url == '') {
-            return [false, 400, 'An empty url is not an url at all :('];
+            return [false, 400, 'An empty url is not a url at all :('];
         }
 
         if (!validator.isURL(url, vOptions)) {

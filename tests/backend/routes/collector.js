@@ -52,7 +52,7 @@ describe('Collector', () => {
 
     describe('validate() method', ()=> {
         it('should respond with an error if url is empty', () => {
-            errorObj.error = 'An empty url is not an url at all :(';
+            errorObj.error = 'An empty url is not a url at all :(';
 
             collector.collect(req, res);
             expect(res.status).to.be.calledWith(400);
