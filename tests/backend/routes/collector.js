@@ -1,19 +1,21 @@
 'use strict';
+let request     = require('request');
+let nock        = require('nock');
 let proxyquire  = require('proxyquire');
 let Collector;
 let collector;
 let req;
 let res;
 let errorObj;
-let requestStub;
 
 describe('Collector', () => {
 
     beforeEach(() => {
-        requestStub = sinon.stub();
+
+        sinon.spy(request, 'get');
 
         Collector = proxyquire('../../../routes/collector', {
-            request: requestStub
+            request: request
         });
 
         res = {
@@ -35,6 +37,10 @@ describe('Collector', () => {
         collector = new Collector();
     });
 
+    afterEach(() => {
+        request.get.restore();
+    });
+
     describe('collect() method', () => {
 
         it('should be defined', () => {
@@ -48,6 +54,39 @@ describe('Collector', () => {
             expect(collector.validate).to.be.called;
         });
 
+        it('should do a request', () => {
+            sinon.spy(collector, 'doRequest');
+            req.query.url = 'http://theprotein.io';
+
+            collector.collect(req, res);
+            expect(collector.doRequest).to.be.called;
+        });
+    });
+
+    describe('doRequest() method', () => {
+        it('should be defined', () => {
+            expect(collector.doRequest).to.not.be.undefined;
+        });
+
+        it('should make a request', () => {
+            nock('http://theprotein.io')
+                .get('/')
+                .reply(200, {
+                    username: 'davidwalshblog',
+                    firstname: 'David'
+                });
+
+            collector.doRequest('http://theprotein.io');
+            expect(request.get).to.be.called;
+        });
+
+        it('should handle an error', () => {
+            nock('http://theprotein.io')
+                .get('/')
+                .replyWithError(404);
+            collector.doRequest('http://theprotein.io');
+
+        });
     });
 
     describe('validate() method', ()=> {

@@ -18,12 +18,24 @@ class Collector {
 
         return [true, 200];
     }
+
+    doRequest(url, callback) {
+        request
+            .get(url)
+            .on('error', (error) => {
+                console.log('error');
+            })
+            .on('response', (res) => {
+                callback();
+            });
+    }
+
     collect(req, res) {
         if (typeof req == 'undefined') {
             return false;
         }
 
-        let url      = req.query.url;
+        let url = req.query.url;
         let [isValid, code, msg] = this.validate(url);
 
         if (!isValid) {
@@ -34,6 +46,12 @@ class Collector {
             });
             return false;
         }
+
+        this.doRequest(url, this.parseForCss);
+    }
+
+    parseForCss() {
+        console.log('Parsing for css ...');
     }
 }
 
