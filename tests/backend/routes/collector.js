@@ -2,11 +2,23 @@
 let request     = require('request');
 let nock        = require('nock');
 let proxyquire  = require('proxyquire');
+
+let errorObj = {
+    status: 400,
+    error:  ''
+};
+let req      = {
+    query: {
+        url: ''
+    }
+};
+let res      = {
+    json:   sinon.spy(),
+    status: sinon.spy()
+};
+
 let Collector;
 let collector;
-let req;
-let res;
-let errorObj;
 
 describe('Collector', () => {
 
@@ -17,24 +29,16 @@ describe('Collector', () => {
         Collector = proxyquire('../../../routes/collector', {
             request: request
         });
-
-        res = {
-            json:   sinon.spy(),
-            status: sinon.spy()
-        };
-
-        req = {
-            query: {
-                url: ''
-            }
-        };
-
-        errorObj = {
-            status: 400,
-            error:  ''
-        };
-
         collector = new Collector();
+
+        // Mocking http requests
+        nock('http://theprotein.io')
+            .get('/')
+            .reply(200);
+
+        nock('http://missingurl.io')
+            .get('/')
+            .replyWithError(404);
     });
 
     afterEach(() => {
@@ -69,23 +73,16 @@ describe('Collector', () => {
         });
 
         it('should make a request', () => {
-            nock('http://theprotein.io')
-                .get('/')
-                .reply(200, {
-                    username: 'davidwalshblog',
-                    firstname: 'David'
-                });
-
             collector.doRequest('http://theprotein.io');
             expect(request.get).to.be.called;
         });
 
-        it('should handle an error', () => {
-            nock('http://theprotein.io')
-                .get('/')
-                .replyWithError(404);
-            collector.doRequest('http://theprotein.io');
+        it('should reject on request error', () => {
+            return expect(collector.doRequest('http://missingurl.io/')).to.be.rejected;
+        });
 
+        it('should resolve on valid request', () => {
+            return expect(collector.doRequest('http://theprotein.io/')).to.be.resolved;
         });
     });
 

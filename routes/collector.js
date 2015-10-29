@@ -19,17 +19,21 @@ class Collector {
         return [true, 200];
     }
 
-    doRequest(url, callback) {
-        request
-            .get(url)
-            .on('error', (error) => {
-                console.log('error');
-            })
-            .on('response', (res) => {
-                callback();
-            });
+    doRequest(url) {
+        return new Promise(function(resolve, reject) {
+            request
+                .get(url)
+                .on('error', (error) => {
+                    reject(error);
+                })
+                .on('response', (res) => {
+                    resolve(res);
+                });
+        });
     }
-
+    parseForCss(url) {
+        console.log('Parsing ' + url + ' for css ...');
+    }
     collect(req, res) {
         if (typeof req == 'undefined') {
             return false;
@@ -46,12 +50,16 @@ class Collector {
             });
             return false;
         }
-
-        this.doRequest(url, this.parseForCss);
-    }
-
-    parseForCss() {
-        console.log('Parsing for css ...');
+        let $fn = this.parseForCss;
+        this.doRequest(url, $fn)
+            .then($fn(url))
+            .catch((error) => {
+                res.status(500);
+                res.json({
+                    status:  error.code,
+                    error:  'Request has failed'
+                });
+            });
     }
 }
 
