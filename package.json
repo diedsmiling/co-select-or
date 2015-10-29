@@ -20,6 +20,7 @@
   "devDependencies": {
     "babel": "^5.8.23",
     "chai": "^3.3.0",
+    "chai-as-promised": "^5.1.0",
     "mocha": "^2.3.3",
     "nock": "^2.16.0",
     "proxyquire": "^1.7.3",
