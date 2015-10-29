@@ -1,6 +1,6 @@
 'use strict';
 let request    = require('request');
-let validator   = require('validator');
+let validator  = require('validator');
 
 class Collector {
     validate(url) {
@@ -20,19 +20,24 @@ class Collector {
     }
 
     doRequest(url) {
-        return new Promise(function(resolve, reject) {
+        let chunks = [];
+        return new Promise((resolve, reject)=> {
             request
                 .get(url)
                 .on('error', (error) => {
                     reject(error);
                 })
-                .on('response', (res) => {
-                    resolve(res);
+                .on('data', (chunk) => {
+                    chunks.push(chunk);
+                })
+                .on('end', () => {
+                    let body = chunks.join('');
+                    resolve(body);
                 });
         });
     }
-    parseForCss(url) {
-        console.log('Parsing ' + url + ' for css ...');
+    parseBody(body) {
+        console.log('Parsing ' + body + ' for selectors ...');
     }
     collect(req, res) {
         if (typeof req == 'undefined') {
@@ -50,14 +55,14 @@ class Collector {
             });
             return false;
         }
-        let $fn = this.parseForCss;
-        this.doRequest(url, $fn)
-            .then($fn(url))
+
+        this.doRequest(url)
+            .then(this.parseBody)
             .catch((error) => {
                 res.status(500);
                 res.json({
                     status:  error.code,
-                    error:  'Request has failed'
+                    error:  'Request has failed!'
                 });
             });
     }

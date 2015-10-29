@@ -17,6 +17,8 @@ let res      = {
     status: sinon.spy()
 };
 
+let htmlBody = '<html><body>An awseome site!</body></html>';
+
 let Collector;
 let collector;
 
@@ -34,7 +36,7 @@ describe('Collector', () => {
         // Mocking http requests
         nock('http://theprotein.io')
             .get('/')
-            .reply(200);
+            .reply(200, htmlBody);
 
         nock('http://missingurl.io')
             .get('/')
@@ -83,6 +85,10 @@ describe('Collector', () => {
 
         it('should resolve on valid request', () => {
             return expect(collector.doRequest('http://theprotein.io/')).to.be.resolved;
+        });
+
+        it('should gather chunks to a string', () => {
+            return expect(collector.doRequest('http://theprotein.io/')).to.eventually.equal(htmlBody);
         });
     });
 
