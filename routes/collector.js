@@ -3,6 +3,13 @@ let request    = require('request');
 let validator  = require('validator');
 
 class Collector {
+
+    /**
+     * Validates url
+     *
+     * @param {str} url
+     * @returns {*[]}
+     */
     validate(url) {
         let vOptions = {
             protocols: ['http', 'https']
@@ -19,6 +26,12 @@ class Collector {
         return [true, 200];
     }
 
+    /**
+     * Fires a request
+     *
+     * @param {str} url
+     * @returns {Promise}
+     */
     doRequest(url) {
         let chunks = [];
         return new Promise((resolve, reject)=> {
@@ -36,9 +49,18 @@ class Collector {
                 });
         });
     }
+
     parseBody(body) {
         console.log('Parsing ' + body + ' for selectors ...');
     }
+
+    /**
+     * Does the main thing - collects selectors
+     *
+     * @param {obj} req
+     * @param {obj} res
+     * @returns {bool}
+     */
     collect(req, res) {
         if (typeof req == 'undefined') {
             return false;
