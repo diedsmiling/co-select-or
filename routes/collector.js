@@ -1,6 +1,9 @@
 'use strict';
-let request    = require('request');
-let validator  = require('validator');
+let request     = require('request');
+let validator   = require('validator');
+let cheerio     = require('cheerio');
+var cssom       = require('cssom');
+//var jsdom       = require('jsdom');
 
 class Collector {
 
@@ -50,8 +53,32 @@ class Collector {
         });
     }
 
-    parseBody(body) {
-        console.log('Parsing ' + body + ' for selectors ...');
+    seekStyles(body) {
+        let outerStyles = [];
+        let innerStyles = [];
+        let $ = cheerio.load(body);
+        console.log(body);
+        return new Promise((resolve, reject) => {
+            setTimeout(() => {
+                $('style').each((i, e) => {
+                    innerStyles.push($(e).text());
+                });
+
+                $('link').each((i, e) => {
+                    //if($(e).attr('rel') == )
+                });
+                if (innerStyles.length == 0 && outerStyles.length == 0) {
+                    reject(new Error('No styles found'));
+                } else {
+                    resolve([innerStyles, outerStyles]);
+                }
+            }, 0);
+        });
+    }
+
+    getOuterStyleContents(url) {
+        //let ur = '//cdn.sstatic.net/stackoverflow/all.css?v=f8f728b3fa0c';
+        //console.log(validator.isURL(ur, {allow_protocol_relative_urls: true}));
     }
 
     /**
@@ -79,7 +106,7 @@ class Collector {
         }
 
         this.doRequest(url)
-            .then(this.parseBody)
+            .then(this.seekStyles)
             .catch((error) => {
                 res.status(500);
                 res.json({

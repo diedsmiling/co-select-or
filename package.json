@@ -33,6 +33,7 @@
     "cssom": "^0.3.0",
     "errorhandler": "^1.4.2",
     "express": "^4.13.3",
+    "jsdom": "^7.0.2",
     "morgan": "^1.6.1",
     "request": "^2.65.0",
     "validator": "^4.2.0"

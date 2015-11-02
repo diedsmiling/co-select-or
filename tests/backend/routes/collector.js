@@ -2,6 +2,7 @@
 let request     = require('request');
 let nock        = require('nock');
 let proxyquire  = require('proxyquire');
+let cheerio     = require('cheerio');
 
 let errorObj = {
     status: 400,
@@ -17,19 +18,21 @@ let res      = {
     status: sinon.spy()
 };
 
-let htmlBody = '<html><body>An awseome site!</body></html>';
-
+let htmlBody = '<html><body>An awesome site!</body></html>';
 let Collector;
 let collector;
 
 describe('Collector', () => {
 
     beforeEach(() => {
-
         sinon.spy(request, 'get');
+        sinon.spy(cheerio, 'load');
+        sinon.spy(cheerio.prototype, 'each');
+        sinon.spy(cheerio.prototype, 'text');
 
         Collector = proxyquire('../../../routes/collector', {
-            request: request
+            request: request,
+            cheerio: cheerio
         });
         collector = new Collector();
 
@@ -45,6 +48,9 @@ describe('Collector', () => {
 
     afterEach(() => {
         request.get.restore();
+        cheerio.load.restore();
+        cheerio.prototype.each.restore();
+        cheerio.prototype.text.restore();
     });
 
     describe('collect() method', () => {
@@ -90,6 +96,40 @@ describe('Collector', () => {
         it('should gather chunks to a string', () => {
             return expect(collector.doRequest('http://theprotein.io/')).to.eventually.equal(htmlBody);
         });
+    });
+
+    describe('seekStyles', () => {
+        it('should be defined', () => {
+            expect(collector.seekStyles).to.not.be.undefined;
+        });
+
+        it('should load body to cheerio', () => {
+            collector.seekStyles(htmlBody);
+            expect(cheerio.load).to.be.called;
+        });
+
+        it('should resolve iterate inner styles if they were found', () => {
+            let htmlBodyWithStyleTag = htmlBody.replace('An awesome site!', '<style>.class{color: red;}</style>!');
+            collector.seekStyles(htmlBodyWithStyleTag);
+            expect(cheerio.prototype.each).to.be.called;
+            expect(cheerio.prototype.text).to.be.called;
+        });
+
+        it('should iterate with $.each() method if link tags where found', () => {
+            let htmlBodyWithLinkTag = htmlBody.replace('An awesome site!', '<link rel="stylesheet" href="style.css">An awesome site!')
+            collector.seekStyles(htmlBodyWithLinkTag);
+            expect(cheerio.prototype.each).to.be.called;
+        });
+
+        it('should reject if styles were not found', () => {
+            return expect(collector.seekStyles(htmlBody)).to.be.resolved;
+            //return expect(collector.doRequest('http://theprotein.io/')).to.be.resolved;
+        });
+
+        it('should resolve if inner styles were found', () => {
+            // return expect(collector.seekStyles(htmlBody)).to.be.resolved;
+        });
+
     });
 
     describe('validate() method', ()=> {
