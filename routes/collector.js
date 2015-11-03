@@ -54,30 +54,33 @@ class Collector {
     }
 
     seekStyles(body) {
-        let outerStyles = [];
-        let innerStyles = [];
-        let $ = cheerio.load(body);
-        console.log(body);
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                $('style').each((i, e) => {
-                    innerStyles.push($(e).text());
-                });
+        let ur = 'index.css';
+        let url = '//cdn.sstatic.net/stackoverflow/all.css?v=f8f728b3fa0c';
+        console.log(validator.isURL(url, { require_protocol: true}));
 
-                $('link').each((i, e) => {
-                    //if($(e).attr('rel') == )
-                });
-                if (innerStyles.length == 0 && outerStyles.length == 0) {
-                    reject(new Error('No styles found'));
-                } else {
-                    resolve([innerStyles, outerStyles]);
-                }
-            }, 0);
+        let styles = [];
+        let outerStyles = [];
+        let $ = cheerio.load(body);
+        $('style').each((i, e) => {
+            styles.push($(e).text());
         });
+
+        $('link').each((i, e) => {
+            if ($(e).attr('rel') == 'stylesheet') {
+                let href = $(e).attr('href');
+                if (validator.isURL(href, { require_protocol: true })) {
+                    outerStyles.push(href);
+                } else {
+                    outerStyles.push(this.url + href);
+                }
+            }
+        });
+
+        console.log(outerStyles);
     }
 
     getOuterStyleContents(url) {
-        //let ur = '//cdn.sstatic.net/stackoverflow/all.css?v=f8f728b3fa0c';
+        // let ur = '//cdn.sstatic.net/stackoverflow/all.css?v=f8f728b3fa0c';
         //console.log(validator.isURL(ur, {allow_protocol_relative_urls: true}));
     }
 
@@ -104,7 +107,7 @@ class Collector {
             });
             return false;
         }
-
+        this.url = url;
         this.doRequest(url)
             .then(this.seekStyles)
             .catch((error) => {
