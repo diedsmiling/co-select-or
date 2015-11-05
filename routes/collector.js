@@ -1,9 +1,8 @@
 'use strict';
 let request     = require('request');
-let validator   = require('validator');
+let validator   = require('../helpers/extended_validator');
 let cheerio     = require('cheerio');
 var cssom       = require('cssom');
-//var jsdom       = require('jsdom');
 
 class Collector {
 
@@ -54,12 +53,10 @@ class Collector {
     }
 
     seekStyles(body) {
-        let ur = 'index.css';
-        let url = '//cdn.sstatic.net/stackoverflow/all.css?v=f8f728b3fa0c';
-        console.log(validator.isURL(url, { require_protocol: true}));
-
-        let styles = [];
+        let mainUrl = this.url;
+        let styles      = [];
         let outerStyles = [];
+        let promises    = [];
         let $ = cheerio.load(body);
         $('style').each((i, e) => {
             styles.push($(e).text());
@@ -68,20 +65,47 @@ class Collector {
         $('link').each((i, e) => {
             if ($(e).attr('rel') == 'stylesheet') {
                 let href = $(e).attr('href');
-                if (validator.isURL(href, { require_protocol: true })) {
-                    outerStyles.push(href);
+                if (validator.isRelativeUrl(href)) {
+                    outerStyles.push(mainUrl + href);
                 } else {
-                    outerStyles.push(this.url + href);
+                    outerStyles.push(href);
                 }
             }
         });
-
         console.log(outerStyles);
+
+        if (outerStyles.length > 0) {
+            outerStyles.forEach((url) => {
+                promises.push(this.doRequest(url));
+            });
+
+            Promise
+                .all(promises)
+                .then(function(values) {
+                    values.forEach((content) =>  {
+                        styles.push(content);
+                    });
+                    console.log(styles);
+                    resolve(styles);
+                })
+                .catch(function(error) {
+                    reject(new Error('Could not parse!'));
+                });
+        } else {
+            setTimeout(() => {
+                if (styles.length > 0) {
+                    console.log('resolving ');
+                //    resolve(styles);
+                } else {
+                    console.log('rejecting! ');
+                  //  reject('No styles found!');
+                }
+            }, 100);
+        }
     }
 
-    getOuterStyleContents(url) {
-        // let ur = '//cdn.sstatic.net/stackoverflow/all.css?v=f8f728b3fa0c';
-        //console.log(validator.isURL(ur, {allow_protocol_relative_urls: true}));
+    countSelectors(stylesheets) {
+
     }
 
     /**
@@ -109,7 +133,12 @@ class Collector {
         }
         this.url = url;
         this.doRequest(url)
-            .then(this.seekStyles)
+            .then((body) => {
+                this.seekStyles(body);
+            })
+            .then((data) => {
+                this.countSelectors(data);
+            })
             .catch((error) => {
                 res.status(500);
                 res.json({
@@ -121,3 +150,4 @@ class Collector {
 }
 
 module.exports = Collector;
+//TODO Refactor "promise all" part

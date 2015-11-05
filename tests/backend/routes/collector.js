@@ -3,6 +3,7 @@ let request     = require('request');
 let nock        = require('nock');
 let proxyquire  = require('proxyquire');
 let cheerio     = require('cheerio');
+let validator   = require('../../../helpers/extended_validator');
 
 let errorObj = {
     status: 400,
@@ -19,7 +20,7 @@ let res      = {
 };
 
 let htmlBody = '<html><body>An awesome site!</body></html>';
-let url = 'http://theprotein.io';
+let url = 'http://theprotein.io/';
 let Collector;
 let collector;
 
@@ -28,13 +29,15 @@ describe('Collector', () => {
     beforeEach(() => {
         sinon.spy(request, 'get');
         sinon.spy(cheerio, 'load');
+        sinon.spy(validator, 'isRelativeUrl');
         sinon.spy(cheerio.prototype, 'each');
         sinon.spy(cheerio.prototype, 'text');
         sinon.spy(cheerio.prototype, 'attr');
 
         Collector = proxyquire('../../../routes/collector', {
             request: request,
-            cheerio: cheerio
+            cheerio: cheerio,
+            '../helpers/extended_validator': validator
         });
         collector = new Collector();
 
@@ -46,6 +49,15 @@ describe('Collector', () => {
         nock('http://missingurl.io')
             .get('/')
             .replyWithError(404);
+
+        nock(url + 'style.css')
+            .get('/')
+            .reply(200, '.red {color: red;}');
+
+        nock(url + 'public/style.css')
+            .get('/')
+            .reply(200, '.blue {color: blue}');
+
     });
 
     afterEach(() => {
@@ -54,6 +66,7 @@ describe('Collector', () => {
         cheerio.prototype.each.restore();
         cheerio.prototype.text.restore();
         cheerio.prototype.attr.restore();
+        validator.isRelativeUrl.restore();
     });
 
     describe('collect() method', () => {
@@ -98,7 +111,8 @@ describe('Collector', () => {
         });
 
         it('should gather chunks to a string', () => {
-            return expect(collector.doRequest('http://theprotein.io/')).to.eventually.equal(htmlBody);
+            return expect(collector.doRequest('http://theprotein.io/'))
+                .to.eventually.equal(htmlBody);
         });
     });
 
@@ -112,18 +126,85 @@ describe('Collector', () => {
             expect(cheerio.load).to.be.called;
         });
 
-        it('should resolve iterate inner styles if they were found', () => {
-            let htmlBodyWithStyleTag = htmlBody.replace('An awesome site!', '<style>.class{color: red;}</style>!');
+        it('should iterate inner styles if they were found', () => {
+            let htmlBodyWithStyleTag =
+                htmlBody
+                    .replace('An awesome site!',
+                    '<style>.class{color: red;}</style>!');
+
+            collector.url = url;
             collector.seekStyles(htmlBodyWithStyleTag);
             expect(cheerio.prototype.each).to.be.called;
             expect(cheerio.prototype.text).to.be.called;
         });
 
         it('should iterate with $.each() method if link tags where found', () => {
-            let htmlBodyWithLinkTag = htmlBody.replace('An awesome site!', '<link rel="stylesheet" href="style.css">An awesome site!')
+            let htmlBodyWithLinkTag =
+                htmlBody
+                    .replace('An awesome site!',
+                        '<link rel="stylesheet" href="style.css/">An awesome site!');
+
+            collector.url = url;
             collector.seekStyles(htmlBodyWithLinkTag);
             expect(cheerio.prototype.each).to.be.called;
             expect(cheerio.prototype.attr).to.be.calledWith('rel');
+            expect(cheerio.prototype.attr).to.be.calledWith('href');
+        });
+
+        it('should check if link url is relative or absolute', ()=> {
+            let htmlBodyWithLinkTag =
+                htmlBody
+                    .replace('An awesome site!',
+                    '<link rel="stylesheet" href="style.css/">');
+
+            collector.url = url;
+            collector.seekStyles(htmlBodyWithLinkTag);
+            expect(validator.isRelativeUrl).to.be.calledWith('style.css/');
+        });
+
+        /*it('should resolve if inner style were found', () => {
+            let htmlBodyWithStyleTag =
+                htmlBody
+                    .replace('An awesome site!',
+                    '<style>.class{color: red;}</style>!'
+                );
+            collector.url = url;
+
+            return expect(
+                collector
+                    .seekStyles(htmlBodyWithStyleTag)
+            ).to.be.resolved;
+        });
+
+        it('should reject if no styles were found', () => {
+            let htmlBodyWithStyleTag =
+                htmlBody
+                    .replace('An awesome site!',
+                    '<style>.class{color: red;}</style>!'
+                );
+            collector.url = url;
+
+            return expect(
+                collector
+                    .seekStyles('aa')
+            ).to.be.resolved;
+        });
+        */
+
+        it('should resolve if outer styles were found and parsed', () => {
+            let htmlBodyWithLinkTag =
+                htmlBody
+                    .replace('An awesome site!',
+                    '<link rel="stylesheet" href="style.css/">' +
+                    '<link rel="stylesheet" href="' + url + 'public/style.css/">'
+                );
+
+            collector.url = url;
+
+            return expect(
+                collector
+                    .seekStyles('a')
+                ).to.be.resolved;
         });
 
     });
