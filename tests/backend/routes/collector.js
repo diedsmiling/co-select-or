@@ -117,6 +117,10 @@ describe('Collector', () => {
     });
 
     describe('seekStyles', () => {
+        beforeEach(() => {
+            collector.url = url;
+        });
+
         it('should be defined', () => {
             expect(collector.seekStyles).to.not.be.undefined;
         });
@@ -131,9 +135,8 @@ describe('Collector', () => {
                 htmlBody
                     .replace('An awesome site!',
                     '<style>.class{color: red;}</style>!');
-
-            collector.url = url;
             collector.seekStyles(htmlBodyWithStyleTag);
+
             expect(cheerio.prototype.each).to.be.called;
             expect(cheerio.prototype.text).to.be.called;
         });
@@ -143,9 +146,8 @@ describe('Collector', () => {
                 htmlBody
                     .replace('An awesome site!',
                         '<link rel="stylesheet" href="style.css/">An awesome site!');
-
-            collector.url = url;
             collector.seekStyles(htmlBodyWithLinkTag);
+
             expect(cheerio.prototype.each).to.be.called;
             expect(cheerio.prototype.attr).to.be.calledWith('rel');
             expect(cheerio.prototype.attr).to.be.calledWith('href');
@@ -156,40 +158,38 @@ describe('Collector', () => {
                 htmlBody
                     .replace('An awesome site!',
                     '<link rel="stylesheet" href="style.css/">');
-
-            collector.url = url;
             collector.seekStyles(htmlBodyWithLinkTag);
+
             expect(validator.isRelativeUrl).to.be.calledWith('style.css/');
         });
 
-        /*it('should resolve if inner style were found', () => {
-            let htmlBodyWithStyleTag =
-                htmlBody
-                    .replace('An awesome site!',
-                    '<style>.class{color: red;}</style>!'
-                );
-            collector.url = url;
-
-            return expect(
-                collector
-                    .seekStyles(htmlBodyWithStyleTag)
-            ).to.be.resolved;
-        });
-
         it('should reject if no styles were found', () => {
+            return collector.seekStyles(htmlBody)
+                .catch((error) => {
+                    expect(error).to.equal('There are no styles');
+                });
+        });
+
+        it('should resolve if inner style were found', () => {
             let htmlBodyWithStyleTag =
                 htmlBody
                     .replace('An awesome site!',
                     '<style>.class{color: red;}</style>!'
                 );
-            collector.url = url;
 
-            return expect(
-                collector
-                    .seekStyles('aa')
-            ).to.be.resolved;
+            return collector
+                .seekStyles(htmlBodyWithStyleTag)
+                .then((data) => {
+                    expect(data).to.deep.equal(
+                        {
+                            notParsed: [],
+                            parsed: [
+                                '.class{color: red;}'
+                            ]
+                        }
+                    );
+                });
         });
-        */
 
         it('should resolve if outer styles were found and parsed', () => {
             let htmlBodyWithLinkTag =
@@ -199,12 +199,19 @@ describe('Collector', () => {
                     '<link rel="stylesheet" href="' + url + 'public/style.css/">'
                 );
 
-            collector.url = url;
-
-            return expect(
-                collector
-                    .seekStyles('a')
-                ).to.be.resolved;
+            return collector
+                .seekStyles(htmlBodyWithLinkTag)
+                .then((data) => {
+                    expect(data).to.deep.equal(
+                        {
+                            parsed: [],
+                            notParsed: [
+                                url + 'style.css/',
+                                url + 'public/style.css/'
+                            ]
+                        }
+                    );
+                });
         });
 
     });

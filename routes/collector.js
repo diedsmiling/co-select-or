@@ -54,9 +54,9 @@ class Collector {
 
     seekStyles(body) {
         let mainUrl = this.url;
-        let styles      = [];
+        let styles = [];
         let outerStyles = [];
-        let promises    = [];
+        let promises = [];
         let $ = cheerio.load(body);
         $('style').each((i, e) => {
             styles.push($(e).text());
@@ -72,6 +72,20 @@ class Collector {
                 }
             }
         });
+        return new Promise((resolve, reject)=> {
+            if (styles.length == 0 && outerStyles.length == 0) {
+                reject('There are no styles');
+            } else {
+                setTimeout(() => {
+                    resolve({
+                        parsed: styles,
+                        notParsed: outerStyles
+                    });
+                }, 100);
+            }
+        });
+    }
+    parseOuterStyles(styles) {
         console.log(outerStyles);
 
         if (outerStyles.length > 0) {
@@ -92,15 +106,13 @@ class Collector {
                     reject(new Error('Could not parse!'));
                 });
         } else {
-            setTimeout(() => {
-                if (styles.length > 0) {
-                    console.log('resolving ');
-                //    resolve(styles);
-                } else {
-                    console.log('rejecting! ');
-                  //  reject('No styles found!');
-                }
-            }, 100);
+            if (styles.length > 0) {
+                console.log('resolving ');
+            //    resolve(styles);
+            } else {
+                console.log('rejecting! ');
+              //  reject('No styles found!');
+            }
         }
     }
 
@@ -134,12 +146,13 @@ class Collector {
         this.url = url;
         this.doRequest(url)
             .then((body) => {
-                this.seekStyles(body);
+                return this.seekStyles(body);
             })
             .then((data) => {
-                this.countSelectors(data);
+                console.log('data', data);
             })
             .catch((error) => {
+                console.log(error);
                 res.status(500);
                 res.json({
                     status:  error.code,
@@ -150,4 +163,3 @@ class Collector {
 }
 
 module.exports = Collector;
-//TODO Refactor "promise all" part
