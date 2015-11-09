@@ -103,11 +103,19 @@ describe('Collector', () => {
         });
 
         it('should reject on request error', () => {
-            return expect(collector.doRequest('http://missingurl.io/')).to.be.rejected;
+            return collector
+                .doRequest('http://missingurl.io/')
+                .catch((error) => {
+                    expect(error).to.deep.equal(new Error('404'));
+                });
         });
 
         it('should resolve on valid request', () => {
-            return expect(collector.doRequest('http://theprotein.io/')).to.be.resolved;
+            return collector
+                .doRequest('http://theprotein.io/')
+                .then((data) => {
+                    expect(data).to.equal(htmlBody);
+                });
         });
 
         it('should gather chunks to a string', () => {
