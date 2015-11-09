@@ -76,12 +76,10 @@ class Collector {
             if (styles.length == 0 && outerStyles.length == 0) {
                 reject('There are no styles');
             } else {
-                setTimeout(() => {
-                    resolve({
-                        parsed: styles,
-                        notParsed: outerStyles
-                    });
-                }, 100);
+                resolve({
+                    parsed: styles,
+                    notParsed: outerStyles
+                });
             }
         });
     }
