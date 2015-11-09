@@ -52,6 +52,12 @@ class Collector {
         });
     }
 
+    /**
+     * Handles styles found in body
+     *
+     * @param {str} body
+     * @returns {Promise}
+     */
     seekStyles(body) {
         let mainUrl = this.url;
         let styles = [];
